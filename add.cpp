@@ -3,8 +3,6 @@
 
 using namespace std;
 
-
-
 void add(int n, float *x, float *y) {
     int z = 0;
     for (int i = 0; i < n; i++) {
