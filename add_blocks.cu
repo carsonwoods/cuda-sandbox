@@ -6,7 +6,15 @@ using namespace std;
 
 __global__
 void add(int n, float *x, float *y) {
-    for (int i = 0; i < n; i++) {
+    //contains the index of the current thread within its block
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+    //contins the number of threads in the block
+    int stride = blockDim.x * gridDim.x;
+
+
+
+    for (int i = index; i < n; i += stride) {
         y[i] = x[i] + y[i];
     }
 }
@@ -17,7 +25,7 @@ int main() {
     //1<<20 is a notation that in this context represents
     //a bitshift. That means that you have the bit 1 and then you shift it to the
     //(in this case) left by 20 spaces and fill the empty space with zeros.
-    int N = 1<<20; // 1M elements
+    int N = 1<<25; // 1M elements
 
     float *x, *y;
 
@@ -37,7 +45,9 @@ int main() {
     }
 
     //Runs cuda kernel on 1M elements on the CPU
-    add<<<1, 1>>>(N, x, y);
+    int blockSize = 256;
+    int numBlocks = (N + blockSize -1) / blockSize;
+    add<<<numBlocks, blockSize>>>(N, x, y);
 
     cout << "Add Completed" << endl;
 
