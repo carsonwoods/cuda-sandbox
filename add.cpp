@@ -15,7 +15,7 @@ int main() {
     //1<<20 is a notation that in this context represents
     //a bitshift. That means that you have the bit 1 and then you shift it to the
     //(in this case) left by 20 spaces and fill the empty space with zeros.
-    int N = 1<<25; // 1M elements
+    int N = 1<<30; // 1M elements
 
     //creates memory space (pointer) to two arrays of 1 million floats
     float *x = new float[N];
@@ -29,6 +29,8 @@ int main() {
 
     //Run kernel on 1M elements on the CPU
     add(N, x, y);
+
+    cout << "Add Complete" << endl;
 
     // Check for errors (all values should be 3.0f)
     float maxError = 0.0f;
