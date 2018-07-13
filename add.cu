@@ -19,14 +19,18 @@ int main() {
     //1<<20 is a notation that in this context represents
     //a bitshift. That means that you have the bit 1 and then you shift it to the
     //(in this case) left by 20 spaces and fill the empty space with zeros.
-    int N = 1<<25; // 1M elements
+    int N = 1<<20; // 1M elements
 
     float *x, *y;
 
     //Allocates "Unified Memory" which is accessible from both the CPU and GPU.
-    cudaMallocManaged(&x, N*sizeof(float));
+    cudaError_t err = cudaMallocManaged(&x, N*sizeof(float));
+    if (err != cudaSuccess) {
+	cout << "CUDA Error" << endl;
+   	printf("%s\n", cudaGetErrorString(err));
+    }	 
+   // cudaMallocManaged(&x, N*sizeof(float));
     cudaMallocManaged(&y, N*sizeof(float));
-
 
     //initialize x and y arrays on the host
     for (int i = 0; i < N; i++) {
@@ -36,6 +40,8 @@ int main() {
 
     //Runs cuda kernel on 1M elements on the CPU
     add<<<1, 1>>>(N, x, y);
+
+    cout << "Add Completed" << endl;
 
     //Forces CPU to wait for GPU to finish before accessing
     cudaDeviceSynchronize();
@@ -52,4 +58,4 @@ int main() {
     cudaFree(y);
 
     return 0;
-}
+} 
