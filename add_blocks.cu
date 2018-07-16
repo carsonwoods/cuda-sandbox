@@ -24,10 +24,17 @@ void add(int n, float *x, float *y) {
 //where z, x, and y are vectors of length N, and alpha and beta are scalars.
 __global__
 void add2(int n, float *x, float *y, float a, float b) {
-     float *z = new float[n];
-     for (int i = 0; i < n; i++) {
-         z[i] = (a * x[i]) + (b * y[i]);
-     }
+    float *z = new float[n];
+     
+    //contains the index of the current thread within its block
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    //contains the number of threads in the block
+    int stride = blockDim.x * gridDim.x;
+
+    for (int i = index; i < n; i += stride) {
+        z[i] = (a * x[i]) + (b * y[i]);
+    }
 }
 
 int main() {
