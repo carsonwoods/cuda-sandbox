@@ -43,8 +43,7 @@ int main() {
     add(N, x, y);
     add2(N, x, y, 4.0, 5.0);
 
-
-    cout << "Add Complete" << endl;
+    cout << "Done!" << endl;
 
     // Check for errors (all values should be 3.0f)
     float maxError = 0.0f;
