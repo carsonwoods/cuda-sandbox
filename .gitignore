@@ -32,4 +32,4 @@
 *.app
 add_cuda
 add_cuda_block
-TestAdd
+add_cpu
