@@ -9,6 +9,18 @@ void add(int n, float *x, float *y) {
     }
 }
 
+
+//I don't relly know what to call this function so this describes its
+//functionality and it will be named add2 because its basically add + extra stuff
+//z = alpha*x + beta* y
+//where z, x, and y are vectors of length N, and alpha and beta are scalars.
+void add2(int n, float *x, float *y, float a, float b) {
+     float *z = new float[n];
+     for (int i = 0; i < n; i++) {
+         z[i] = (a * x[i]) + (b * y[i]);
+     }
+}
+
 int main() {
 
     //For my own sanity lets explain this.
@@ -29,6 +41,8 @@ int main() {
 
     //Run kernel on 1M elements on the CPU
     add(N, x, y);
+    add2(N, x, y, 4.0, 5.0);
+
 
     cout << "Add Complete" << endl;
 
