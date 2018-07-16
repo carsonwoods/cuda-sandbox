@@ -12,11 +12,22 @@ void add(int n, float *x, float *y) {
     //contins the number of threads in the block
     int stride = blockDim.x * gridDim.x;
 
-
-
     for (int i = index; i < n; i += stride) {
         y[i] = x[i] + y[i];
     }
+}
+
+
+//I don't relly know what to call this function so this describes its
+//functionality and it will be named add2 because its basically add + extra stuff
+//z = alpha*x + beta* y
+//where z, x, and y are vectors of length N, and alpha and beta are scalars.
+__global__
+void add2(int n, float *x, float *y, float a, float b) {
+     float *z = new float[n];
+     for (int i = 0; i < n; i++) {
+         z[i] = (a * x[i]) + (b * y[i]);
+     }
 }
 
 int main() {
@@ -30,13 +41,14 @@ int main() {
     float *x, *y;
 
     //Allocates "Unified Memory" which is accessible from both the CPU and GPU.
-    cudaError_t err = cudaMallocManaged(&x, N*sizeof(float));
-    if (err != cudaSuccess) {
-	cout << "CUDA Error" << endl;
-   	//printf("%s\n", cudaGetErrorString(err));
-    }	 
-   // cudaMallocManaged(&x, N*sizeof(float));
-    cudaMallocManaged(&y, N*sizeof(float));
+    cudaError_t cudaMallocErr1 = cudaMallocManaged(&x, N*sizeof(float));
+    if (cudaMallocErr1 != cudaSuccess) {
+        cout << "CUDA Error" << endl;
+    }
+    cudaError_t cudaMallocErr2 = cudaMallocManaged(&y, N*sizeof(float));
+    if (cudaMallocErr2 != cudaSuccess) {
+        cout << "CUDA Error" << endl;
+    }
 
     //initialize x and y arrays on the host
     for (int i = 0; i < N; i++) {
@@ -47,9 +59,12 @@ int main() {
     //Runs cuda kernel on 1M elements on the CPU
     int blockSize = 256;
     int numBlocks = (N + blockSize -1) / blockSize;
-    add<<<numBlocks, blockSize>>>(N, x, y);
 
-    cout << "Add Completed" << endl;
+    add<<<numBlocks, blockSize>>>(N, x, y);
+    add2<<<numBlocks, blockSize>>>(N, x, y, 4.0, 5.0);
+
+
+    cout << "Done!" << endl;
 
     //Forces CPU to wait for GPU to finish before accessing
     cudaDeviceSynchronize();
@@ -66,4 +81,5 @@ int main() {
     cudaFree(y);
 
     return 0;
+
 } 
