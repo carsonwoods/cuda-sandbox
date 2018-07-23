@@ -25,15 +25,47 @@ void add(int n, float *x, float *y) {
 __global__
 void add2(int n, float *x, float *y, float a, float b) {
     float *z = new float[n];
-     
+
     //contains the index of the current thread within its block
     int index = blockIdx.x * blockDim.x + threadIdx.x;
-    
+
     //contains the number of threads in the block
     int stride = blockDim.x * gridDim.x;
 
     for (int i = index; i < n; i += stride) {
         z[i] = (a * x[i]) + (b * y[i]);
+    }
+}
+
+
+/*  Ok so I am still figuring this out but here is my understanding
+    of the following function:
+    NOTE: This code is modified from an example provided by nVidia
+
+    1) GPU Kernel is passed mem address of matrix/vector to analyze.
+    2) GPU Kernel is also passed mem address of where to store final result.
+    3) Current thread_id and stride is set.
+    4) 
+
+
+*/
+__global__ void verticalOperation(int *global_input_data, int *global_output_data) {
+    extern __shared__ int shared_data[];
+    //each thread loads one element from global memory into shared memory
+    int thread_id = threadIdx.x;
+    int stride = blockIdx.x * blockDim.x + threadIdx.x;
+    shared_data[thread_id] = global_input_data[stride];
+    __syncthreads();
+    //do reduction in shared memory
+    for(int s=1; s < blockDim.x; s *= 2) {
+        if (thread_id % (2*s) == 0) {
+        shared_data[thread_id] += shared_data[thread_id + s];
+    }
+    __syncthreads();
+}
+    // write result for this block to global mem
+    if (thread_id == 0) {
+        global_output_data[blockIdx.x] = shared_data[0];
     }
 }
 
@@ -70,6 +102,7 @@ int main() {
     add<<<numBlocks, blockSize>>>(N, x, y);
     add2<<<numBlocks, blockSize>>>(N, x, y, 4.0, 5.0);
 
+    cout << verticalOperation<<<numBlocks, blockSize>>>(N, x);
 
     cout << "Done!" << endl;
 
@@ -89,4 +122,4 @@ int main() {
 
     return 0;
 
-} 
+}
