@@ -25,13 +25,28 @@ void add2(int n, float *x, float *y, float a, float b) {
 }
 
 
+//This is called a vertical operation
+//Will find the largest element in a vector (in this case vector of floats)
+//Single threaded on GPU.
+__global__
+float verticalOperation(int n, float* x) {
+    float largestValue = x[0];
+    for (int i = 1; i < n; i++) {
+        if (x[i] > largestValue) {
+            largestValue = x[i];
+        }
+    }
+    return largestValue;
+}
+
+
 int main() {
 
     //For my own sanity lets explain this.
     //1<<20 is a notation that in this context represents
     //a bitshift. That means that you have the bit 1 and then you shift it to the
     //(in this case) left by 20 spaces and fill the empty space with zeros.
-    int N = 1<<30; // 1M elements
+    int N = 1<<20; // 1M elements
 
     float *x, *y;
 
@@ -54,6 +69,7 @@ int main() {
     //Runs cuda kernel on 1M elements on the GPU
     add<<<1, 1>>>(N, x, y);
     add2<<<1, 1>>>(N, x, y, 4.0, 5.0);
+    cout <<  verticalOperation<<<1, 1>>>(N, x) << endl;
 
     cout << "Done!" << endl;
 
