@@ -21,6 +21,20 @@ void add2(int n, float *x, float *y, float a, float b) {
      }
 }
 
+
+//This is called a vertical operation
+//Will find the largest element in a vector (in this case vector of floats)
+//Single threaded on CPU.
+float verticalOperation(int n, float* x) {
+    float largestValue = x[0];
+    for (int i = 0; i < n; i++) {
+        if (x[i] > largestValue) {
+            largestValue = x[i];
+        }
+    }
+    return largestValue;
+}
+
 int main() {
 
     //For my own sanity lets explain this.
@@ -42,7 +56,7 @@ int main() {
     //Run kernel on 1M elements on the CPU
     add(N, x, y);
     add2(N, x, y, 4.0, 5.0);
-
+    cout <<  verticalOperation(N, x) << endl;
     cout << "Done!" << endl;
 
     // Check for errors (all values should be 3.0f)
