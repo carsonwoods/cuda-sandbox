@@ -49,7 +49,7 @@ void add2(int n, float *x, float *y, float a, float b) {
 
 
 */
-__global__ void verticalOperation(int *global_input_data, int *global_output_data) {
+__global__ void verticalOperation(float *global_input_data, float *global_output_data) {
     extern __shared__ int shared_data[];
     //each thread loads one element from global memory into shared memory
     int thread_id = threadIdx.x;
@@ -77,7 +77,7 @@ int main() {
     //(in this case) left by 20 spaces and fill the empty space with zeros.
     int N = 1<<30; // 1M elements
 
-    float *x, *y;
+    float *x, *y, *z;
 
     //Allocates "Unified Memory" which is accessible from both the CPU and GPU.
     cudaError_t cudaMallocErr1 = cudaMallocManaged(&x, N*sizeof(float));
@@ -88,6 +88,12 @@ int main() {
     if (cudaMallocErr2 != cudaSuccess) {
         cout << "CUDA Error" << endl;
     }
+    cudaError_t cudaMallocErr3 = cudaMallocManaged(&z, sizeof(float));
+    if (cudaMallocErr3 != cudaSuccess) {
+        cout << "CUDA Error" << endl;
+    }
+
+    z[0] = 1.0f;
 
     //initialize x and y arrays on the host
     for (int i = 0; i < N; i++) {
@@ -102,7 +108,7 @@ int main() {
     add<<<numBlocks, blockSize>>>(N, x, y);
     add2<<<numBlocks, blockSize>>>(N, x, y, 4.0, 5.0);
 
-    cout << verticalOperation<<<numBlocks, blockSize>>>(N, x);
+    verticalOperation<<<numBlocks, blockSize>>>(x, z);
 
     cout << "Done!" << endl;
 
@@ -114,7 +120,7 @@ int main() {
     for (int i = 0; i < N; i++) {
         maxError = fmax(maxError, fabs(y[i]-3.0f));
     }
-    std::cout << "Max error: " << maxError << std::endl;
+    cout << "Max error: " << maxError << endl;
 
     // Free memory
     cudaFree(x);
