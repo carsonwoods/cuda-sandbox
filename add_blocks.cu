@@ -1,5 +1,6 @@
 #include <iostream>
 #include <math.h>
+#include <stdio.h>
 
 using namespace std;
 
@@ -37,37 +38,76 @@ void add2(int n, float *x, float *y, float a, float b) {
     }
 }
 
+__global__ void verticalOperation(int size, float *global_input_data, float *global_output_data) {
+   
+    extern __shared__ float thread_maxima[];   
 
-/*  Ok so I am still figuring this out but here is my understanding
-    of the following function:
-    NOTE: This code is modified from an example provided by nVidia
-
-    1) GPU Kernel is passed mem address of matrix/vector to analyze.
-    2) GPU Kernel is also passed mem address of where to store final result.
-    3) Current thread_id and stride is set.
-    4) 
-
-
-*/
-__global__ void verticalOperation(float *global_input_data, float *global_output_data) {
-    extern __shared__ int shared_data[];
     //each thread loads one element from global memory into shared memory
     int thread_id = threadIdx.x;
-    int stride = blockIdx.x * blockDim.x + threadIdx.x;
-    shared_data[thread_id] = global_input_data[stride];
+    int numBlocks = gridDim.x;
+    int numTotalThreads = gridDim.x * blockDim.x;
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+    //Sets each thread's starting point in the global_input_data 
+    int loopIndex = (size/numTotalThreads) + index; 
+
+    //sets thread_max to first element in array for initial comparison
+    float thread_max = global_input_data[loopIndex];
+
+    //iterate across a threads domain until maximum is found
+    //Loop operates as follows:
+    //Each thread has its starting position set by loopIndex.
+    //Loop will iterate until the starting point of the next thread is hit.
+    //Each iteration the thread compares the value in the array against the current thread_max
+    for(int i = loopIndex; i < loopIndex + size/blockDim.x; i++) {
+        if (global_input_data[loopIndex + i] > thread_max) {
+            thread_max = global_input_data[loopIndex + i];
+        }
+    }   
+   
+    //max for each thread is placed into thread_maxmia for next comparison
+    //NOTE: Since thread_maxima is shared memory thread_id is used. 
+    //      Shared Memory is only shared across a single block so index isn't used.
+    thread_maxima[thread_id] = thread_max;
+    
+    //Threads are synced to ensure all comparisons that need to be made are done.
     __syncthreads();
-    //do reduction in shared memory
-    for(int s=1; s < blockDim.x; s *= 2) {
-        if (thread_id % (2*s) == 0) {
-        shared_data[thread_id] += shared_data[thread_id + s];
+
+
+    //find the maximum value from all threads in a single block
+    //appends that value to block_maximum[]
+    if (thread_id == 0) { 
+        float max = thread_maxima[0];
+
+        //thread 0 of each block iterates across all values of thread_maxima
+        //numTotalThreads/(size/blockDim.x) should be the size of thread_maxima
+        for (int x = 0; x < numTotalThreads/(size/blockDim.x); x++) {
+            if (thread_maxima[x] > max) {
+                max = thread_maxima[x];
+            }
+        }
+
+        //The largest value of each block is placed in global_output_data 
+        global_output_data[blockIdx.x] = max;
     }
-    __syncthreads();
-}
-    // write result for this block to global mem
-    if (thread_id == 0) {
-        global_output_data[blockIdx.x] = shared_data[0];
+
+
+    __syncthreads();    
+
+    //find the maximum value from all blocks using one last thread
+    //appends that value to block_maximum[]
+    if (loopIndex == 0) {
+        float max = global_output_data[0];
+        for (int x = 0; x < numBlocks; x++) {
+            if (global_output_data[x] > max) {
+                max = global_output_data[x];
+            }
+        }
+        global_output_data[0] = max;
     }
-}
+   
+}   
+
 
 int main() {
 
@@ -88,43 +128,41 @@ int main() {
     if (cudaMallocErr2 != cudaSuccess) {
         cout << "CUDA Error" << endl;
     }
-    cudaError_t cudaMallocErr3 = cudaMallocManaged(&z, sizeof(float));
+    cudaError_t cudaMallocErr3 = cudaMallocManaged(&z, N*sizeof(float));
     if (cudaMallocErr3 != cudaSuccess) {
         cout << "CUDA Error" << endl;
     }
 
-    z[0] = 1.0f;
-
     //initialize x and y arrays on the host
     for (int i = 0; i < N; i++) {
         x[i] = 1.0f;
-        y[i] = 2.0f;
+        y[i] = 2.0f; 
     }
 
     //Runs cuda kernel on 1M elements on the CPU
     int blockSize = 256;
     int numBlocks = (N + blockSize -1) / blockSize;
 
-    add<<<numBlocks, blockSize>>>(N, x, y);
-    add2<<<numBlocks, blockSize>>>(N, x, y, 4.0, 5.0);
+    // add<<<numBlocks, blockSize>>>(N, x, y);
+    //add2<<<numBlocks, blockSize>>>(N, x, y, 4.0, 5.0);
 
-    verticalOperation<<<numBlocks, blockSize>>>(x, z);
+    //ensures that there is a value that could be largest
+    x[5] = 987654.0f;
+    int size = N;
+
+    verticalOperation<<<numBlocks, blockSize>>>(size, x, z);
+
+    cout << "Largest value in array x: " << z[0] << endl;
 
     cout << "Done!" << endl;
 
     //Forces CPU to wait for GPU to finish before accessing
     cudaDeviceSynchronize();
 
-    // Check for errors (all values should be 3.0f)
-    float maxError = 0.0f;
-    for (int i = 0; i < N; i++) {
-        maxError = fmax(maxError, fabs(y[i]-3.0f));
-    }
-    cout << "Max error: " << maxError << endl;
-
     // Free memory
     cudaFree(x);
     cudaFree(y);
+    cudaFree(z);
 
     return 0;
 
