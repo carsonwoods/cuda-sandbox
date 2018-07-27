@@ -25,21 +25,6 @@ void add2(int n, float *x, float *y, float a, float b) {
 }
 
 
-//This is called a vertical operation
-//Will find the largest element in a vector (in this case vector of floats)
-//Single threaded on GPU.
-__global__
-float verticalOperation(int n, float* x) {
-    float largestValue = x[0];
-    for (int i = 1; i < n; i++) {
-        if (x[i] > largestValue) {
-            largestValue = x[i];
-        }
-    }
-    return largestValue;
-}
-
-
 int main() {
 
     //For my own sanity lets explain this.
@@ -69,8 +54,7 @@ int main() {
     //Runs cuda kernel on 1M elements on the GPU
     add<<<1, 1>>>(N, x, y);
     add2<<<1, 1>>>(N, x, y, 4.0, 5.0);
-    cout <<  verticalOperation<<<1, 1>>>(N, x) << endl;
-
+   
     cout << "Done!" << endl;
 
     //Forces CPU to wait for GPU to finish before accessing
