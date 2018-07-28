@@ -168,72 +168,7 @@ void testVerticalOperation() {
 
 int main() {
 
-    //For my own sanity lets explain this.
-    //1<<20 is a notation that in this context represents
-    //a bitshift. That means that you have the bit 1 and then you shift it to the
-    //(in this case) left by 20 spaces and fill the empty space with zeros.
-    /*int N = 1<<18; // 1M elements
-
-    float *x, *y, *z;
-    float t[N], q[N];
-
-    //Allocates "Unified Memory" which is accessible from both the CPU and GPU.
-    cudaError_t cudaMallocErr1 = cudaMallocManaged(&x, N*sizeof(float));
-    if (cudaMallocErr1 != cudaSuccess) {
-        cout << "CUDA Error" << endl;
-    }
-    cudaError_t cudaMallocErr2 = cudaMallocManaged(&y, N*sizeof(float));
-    if (cudaMallocErr2 != cudaSuccess) {
-        cout << "CUDA Error" << endl;
-    }
-    cudaError_t cudaMallocErr3 = cudaMallocManaged(&z, N*sizeof(float));
-    if (cudaMallocErr3 != cudaSuccess) {
-        cout << "CUDA Error" << endl;
-    }
-
-    //initialize x and y arrays on the host
-    for (int i = 0; i < N; i++) {
-        y[i] = 2.0f;
-        t[i] = 1.0f;
-        q[i] = 0.0f;
-    }
-
-    int blockSize = 256;
-    int numBlocks = N/blockSize;
-
-    //add<<<numBlocks, blockSize>>>(N, x, y);
-    //add2<<<numBlocks, blockSize>>>(N, x, y, 4.0, 5.0);
-
-    //ensures that there is a value that could be largest
-    t[5] = 987654.0f;
-
-    //copy memory to device from host and print error if found
-    cudaError_t cudaMemcpy1Err = cudaMemcpy(x, t, N*sizeof(float), cudaMemcpyHostToDevice);
-    if (cudaMemcpy1Err != cudaSuccess) {
-        cout << "Memcpy to Device Error: " << cudaMemcpy1Err << endl;
-    }
-
-    verticalOperation<<<numBlocks, blockSize, N*sizeof(float)>>>(N, x, z);
-
-    //copy memory to host from device and print error if found
-    cudaError_t cudaMemcpy2Err = cudaMemcpy(q, x, N*sizeof(float), cudaMemcpyDeviceToHost);
-    if (cudaMemcpy2Err != cudaSuccess) {
-        cout << "Memcpy to Host Error: " << cudaMemcpy2Err << endl;
-    }
-
-    cout << "Largest value in array q: " << q[0] << endl;
-
-    cout << "Done!" << endl;
-
-    //Forces CPU to wait for GPU to finish before accessing
-    cudaDeviceSynchronize();
-
-    // Free memory
-    cudaFree(x);
-    cudaFree(y);
-    cudaFree(z);
-    */
-
+    //Runs test for verticalOperation kernal on GPU
     testVerticalOperation();
     return 0;
 
