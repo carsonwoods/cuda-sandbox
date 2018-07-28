@@ -39,14 +39,15 @@ void add2(int n, float *x, float *y, float a, float b) {
 }
 
 __global__ void verticalOperation(int size, float *global_input_data, float *global_output_data) {
-   
-    extern __shared__ float thread_maxima[];   
+    //if (threadIdx.x == 0 && blockIdx.x < 5)  printf("%d %d\n",global_input_data[5], sizeof(global_input_data));   
 
     //each thread loads one element from global memory into shared memory
     int thread_id = threadIdx.x;
     int numBlocks = gridDim.x;
     int numTotalThreads = gridDim.x * blockDim.x;
     int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+    extern __shared__ float thread_maxima[];
 
     //Sets each thread's starting point in the global_input_data 
     int loopIndex = (size/numTotalThreads) + index; 
@@ -64,15 +65,14 @@ __global__ void verticalOperation(int size, float *global_input_data, float *glo
             thread_max = global_input_data[loopIndex + i];
         }
     }   
-   
+
     //max for each thread is placed into thread_maxmia for next comparison
     //NOTE: Since thread_maxima is shared memory thread_id is used. 
     //      Shared Memory is only shared across a single block so index isn't used.
     thread_maxima[thread_id] = thread_max;
-    
+
     //Threads are synced to ensure all comparisons that need to be made are done.
     __syncthreads();
-
 
     //find the maximum value from all threads in a single block
     //appends that value to block_maximum[]
@@ -95,7 +95,6 @@ __global__ void verticalOperation(int size, float *global_input_data, float *glo
     __syncthreads();    
 
     //find the maximum value from all blocks using one last thread
-    //appends that value to block_maximum[]
     if (loopIndex == 0) {
         float max = global_output_data[0];
         for (int x = 0; x < numBlocks; x++) {
@@ -115,9 +114,10 @@ int main() {
     //1<<20 is a notation that in this context represents
     //a bitshift. That means that you have the bit 1 and then you shift it to the
     //(in this case) left by 20 spaces and fill the empty space with zeros.
-    int N = 1<<30; // 1M elements
+    int N = 1<<18; // 1M elements
 
     float *x, *y, *z;
+    float t[N], q[N];
 
     //Allocates "Unified Memory" which is accessible from both the CPU and GPU.
     cudaError_t cudaMallocErr1 = cudaMallocManaged(&x, N*sizeof(float));
@@ -135,22 +135,37 @@ int main() {
 
     //initialize x and y arrays on the host
     for (int i = 0; i < N; i++) {
-        x[i] = 1.0f;
-        y[i] = 2.0f; 
+        //x[i] = 1.0f;
+        y[i] = 2.0f;
+        t[i] = 1.0f;
+        q[i] = 0.0f; 
     }
 
-    //Runs cuda kernel on 1M elements on the CPU
     int blockSize = 256;
-    int numBlocks = (N + blockSize -1) / blockSize;
+    int numBlocks = N/blockSize;
 
-    // add<<<numBlocks, blockSize>>>(N, x, y);
+    //add<<<numBlocks, blockSize>>>(N, x, y);
     //add2<<<numBlocks, blockSize>>>(N, x, y, 4.0, 5.0);
 
     //ensures that there is a value that could be largest
-    x[5] = 987654.0f;
-    int size = N;
+    t[5] = 987654.0f;
 
-    verticalOperation<<<numBlocks, blockSize>>>(size, x, z);
+    //calculate memory size
+    int memSize = (blockSize*numBlocks)/(N/blockSize);
+
+    //copy memory to device from host and print error if found
+    cudaError_t cudaMemcpy1Err = cudaMemcpy(x, t, N*sizeof(float), cudaMemcpyHostToDevice);
+    if (cudaMemcpy1Err != cudaSuccess) {
+        cout << "Memcpy to Device Error: " << cudaMemcpy1Err << endl;
+    }
+
+    verticalOperation<<<numBlocks, blockSize, memSize>>>(N, x, z);
+
+    //copy memory to host from device and print error if found
+    cudaError_t cudaMemcpy2Err = cudaMemcpy(q, x, N*sizeof(float), cudaMemcpyDeviceToHost);
+    if (cudaMemcpy2Err != cudaSuccess) {
+        cout << "Memcpy to Host Error: " << cudaMemcpy2Err << endl;
+    }
 
     cout << "Largest value in array x: " << z[0] << endl;
 
