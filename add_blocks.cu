@@ -39,7 +39,7 @@ void add2(int n, float *x, float *y, float a, float b) {
 }
 
 __global__ void verticalOperation(int size, float *global_input_data, float *global_output_data) {
-    //if (threadIdx.x == 0 && blockIdx.x < 5)  printf("%d %d\n",global_input_data[5], sizeof(global_input_data));   
+    printf("%d\n",global_input_data[5]);   
 
     //each thread loads one element from global memory into shared memory
     int thread_id = threadIdx.x;
@@ -107,6 +107,11 @@ __global__ void verticalOperation(int size, float *global_input_data, float *glo
    
 }   
 
+void testVerticalOperation() {
+    
+
+}
+
 
 int main() {
 
@@ -135,7 +140,6 @@ int main() {
 
     //initialize x and y arrays on the host
     for (int i = 0; i < N; i++) {
-        //x[i] = 1.0f;
         y[i] = 2.0f;
         t[i] = 1.0f;
         q[i] = 0.0f; 
@@ -150,16 +154,13 @@ int main() {
     //ensures that there is a value that could be largest
     t[5] = 987654.0f;
 
-    //calculate memory size
-    int memSize = (blockSize*numBlocks)/(N/blockSize);
-
     //copy memory to device from host and print error if found
     cudaError_t cudaMemcpy1Err = cudaMemcpy(x, t, N*sizeof(float), cudaMemcpyHostToDevice);
     if (cudaMemcpy1Err != cudaSuccess) {
         cout << "Memcpy to Device Error: " << cudaMemcpy1Err << endl;
     }
 
-    verticalOperation<<<numBlocks, blockSize, memSize>>>(N, x, z);
+    verticalOperation<<<numBlocks, blockSize, N*sizeof(float)>>>(N, x, z);
 
     //copy memory to host from device and print error if found
     cudaError_t cudaMemcpy2Err = cudaMemcpy(q, x, N*sizeof(float), cudaMemcpyDeviceToHost);
@@ -167,7 +168,7 @@ int main() {
         cout << "Memcpy to Host Error: " << cudaMemcpy2Err << endl;
     }
 
-    cout << "Largest value in array x: " << z[0] << endl;
+    cout << "Largest value in array q: " << q[0] << endl;
 
     cout << "Done!" << endl;
 
