@@ -39,7 +39,7 @@ void add2(int n, float *x, float *y, float a, float b) {
 }
 
 __global__ void verticalOperation(int size, float *global_input_data, float *global_output_data) {
-    printf("%d\n",global_input_data[5]);   
+    printf("%d\n",global_input_data[5]);
 
     //each thread loads one element from global memory into shared memory
     int thread_id = threadIdx.x;
@@ -49,8 +49,8 @@ __global__ void verticalOperation(int size, float *global_input_data, float *glo
 
     extern __shared__ float thread_maxima[];
 
-    //Sets each thread's starting point in the global_input_data 
-    int loopIndex = (size/numTotalThreads) + index; 
+    //Sets each thread's starting point in the global_input_data
+    int loopIndex = (size/numTotalThreads) + index;
 
     //sets thread_max to first element in array for initial comparison
     float thread_max = global_input_data[loopIndex];
@@ -64,10 +64,10 @@ __global__ void verticalOperation(int size, float *global_input_data, float *glo
         if (global_input_data[loopIndex + i] > thread_max) {
             thread_max = global_input_data[loopIndex + i];
         }
-    }   
+    }
 
     //max for each thread is placed into thread_maxmia for next comparison
-    //NOTE: Since thread_maxima is shared memory thread_id is used. 
+    //NOTE: Since thread_maxima is shared memory thread_id is used.
     //      Shared Memory is only shared across a single block so index isn't used.
     thread_maxima[thread_id] = thread_max;
 
@@ -76,7 +76,7 @@ __global__ void verticalOperation(int size, float *global_input_data, float *glo
 
     //find the maximum value from all threads in a single block
     //appends that value to block_maximum[]
-    if (thread_id == 0) { 
+    if (thread_id == 0) {
         float max = thread_maxima[0];
 
         //thread 0 of each block iterates across all values of thread_maxima
@@ -87,12 +87,12 @@ __global__ void verticalOperation(int size, float *global_input_data, float *glo
             }
         }
 
-        //The largest value of each block is placed in global_output_data 
+        //The largest value of each block is placed in global_output_data
         global_output_data[blockIdx.x] = max;
     }
 
 
-    __syncthreads();    
+    __syncthreads();
 
     //find the maximum value from all blocks using one last thread
     if (loopIndex == 0) {
@@ -104,11 +104,64 @@ __global__ void verticalOperation(int size, float *global_input_data, float *glo
         }
         global_output_data[0] = max;
     }
-   
-}   
+
+}
 
 void testVerticalOperation() {
+    //For my own sanity lets explain this.
+    //1<<20 is a notation that in this context represents
+    //a bitshift. That means that you have the bit 1 and then you shift it to the
+    //(in this case) left by 20 spaces and fill the empty space with zeros.
+    int N = 1<<18; // 1M elements
+
+    float *deviceArray;
+    float hostArray[N], result[N];
+
+    //Allocates "Unified Memory" which is accessible from both the CPU and GPU.
+    cudaError_t cudaMallocErr1 = cudaMallocManaged(&deviceArray, N*sizeof(float));
+    if (cudaMallocErr1 != cudaSuccess) {
+        cout << "CUDA Error" << endl;
+    }
+
+
+    //initialize x and y arrays on the host
+    for (int i = 0; i < N; i++) {
+        hostArray[i] = 1.0f;
+        result[i] = 0.0f;
+    }
+
+    int blockSize = 256;
+    int numBlocks = N/blockSize;
+
+
+    //ensures that there is a value that could be largest
+    t[5] = 987654.0f;
+
+    //copy memory to device from host and print error if found
+    cudaError_t cudaMemcpy1Err = cudaMemcpy(deviceArray, hostArray, N*sizeof(float), cudaMemcpyHostToDevice);
+    if (cudaMemcpy1Err != cudaSuccess) {
+        cout << "Memcpy to Device Error: " << cudaMemcpy1Err << endl;
+    }
+
+    verticalOperation<<<numBlocks, blockSize, N*sizeof(float)>>>(N, x, z);
+
+    //copy memory to host from device and print error if found
+    cudaError_t cudaMemcpy2Err = cudaMemcpy(result, deviceArray, N*sizeof(float), cudaMemcpyDeviceToHost);
+    if (cudaMemcpy2Err != cudaSuccess) {
+        cout << "Memcpy to Host Error: " << cudaMemcpy2Err << endl;
+    }
+
+    cout << "Largest value in hostArray: " << result[0] << endl;
+
+    cout << "Done!" << endl;
+
+    //Forces CPU to wait for GPU to finish before accessing
+    cudaDeviceSynchronize();
+
+    // Free memory
+    cudaFree(deviceArray);
     
+    return 0;
 
 }
 
@@ -142,7 +195,7 @@ int main() {
     for (int i = 0; i < N; i++) {
         y[i] = 2.0f;
         t[i] = 1.0f;
-        q[i] = 0.0f; 
+        q[i] = 0.0f;
     }
 
     int blockSize = 256;
