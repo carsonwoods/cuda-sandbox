@@ -135,7 +135,7 @@ void testVerticalOperation() {
 
 
     //ensures that there is a value that could be largest
-    t[5] = 987654.0f;
+    hostArray[5] = 987654.0f;
 
     //copy memory to device from host and print error if found
     cudaError_t cudaMemcpy1Err = cudaMemcpy(deviceArray, hostArray, N*sizeof(float), cudaMemcpyHostToDevice);
@@ -143,7 +143,7 @@ void testVerticalOperation() {
         cout << "Memcpy to Device Error: " << cudaMemcpy1Err << endl;
     }
 
-    verticalOperation<<<numBlocks, blockSize, N*sizeof(float)>>>(N, x, z);
+    verticalOperation<<<numBlocks, blockSize, N*sizeof(float)>>>(N, deviceArray, result);
 
     //copy memory to host from device and print error if found
     cudaError_t cudaMemcpy2Err = cudaMemcpy(result, deviceArray, N*sizeof(float), cudaMemcpyDeviceToHost);
@@ -160,9 +160,6 @@ void testVerticalOperation() {
 
     // Free memory
     cudaFree(deviceArray);
-
-    return 0;
-
 }
 
 
