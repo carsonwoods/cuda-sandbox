@@ -160,7 +160,7 @@ void testVerticalOperation() {
 
     // Free memory
     cudaFree(deviceArray);
-    
+
     return 0;
 
 }
@@ -172,7 +172,7 @@ int main() {
     //1<<20 is a notation that in this context represents
     //a bitshift. That means that you have the bit 1 and then you shift it to the
     //(in this case) left by 20 spaces and fill the empty space with zeros.
-    int N = 1<<18; // 1M elements
+    /*int N = 1<<18; // 1M elements
 
     float *x, *y, *z;
     float t[N], q[N];
@@ -232,7 +232,9 @@ int main() {
     cudaFree(x);
     cudaFree(y);
     cudaFree(z);
+    */
 
+    testVerticalOperation();
     return 0;
 
 }
