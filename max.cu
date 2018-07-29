@@ -18,7 +18,16 @@ __global__ void verticalOperation(int size, float *deviceArray, float *deviceRes
     }
     
     deviceResult[0] = max;
+   
     
+    extern __shared__ float shared_memory_array[];
+
+    shared_memory_array[threadIdx.x] = deviceArray[thread_index];
+
+
+
+
+
     /*
     extern __shared__ float thread_maxima[];
     
