@@ -5,22 +5,28 @@ using namespace std;
 
 __global__ void verticalOperation(int size, float *deviceArray, float *deviceResult) {
     
-    
     int numBlocks = gridDim.x;
     int numTotalThreads = gridDim.x * blockDim.x;
     int thread_index = blockIdx.x * blockDim.x + threadIdx.x;
-        
-    if (thread_index == 0) printf("Hello World");
+      
     
-    __shared__ float thread_maxima[1 << 18];
+    float max = deviceArray[0];
+    for (int x = 0; x < size; x++) {
+        if (deviceArray[x] > max) {
+            max = deviceArray[x];
+        }
+    }
+    
+    deviceResult[0] = max;
+    
+    /*
+    extern __shared__ float thread_maxima[];
     
     //Sets each thread's starting point in the deviceArray
     int loopIndex = (size/numTotalThreads) * thread_index;
 
     //sets thread_max to first element in array for initial comparison
     float thread_max = deviceArray[loopIndex];
-    
-
     
     //iterate across a threads domain until maximum is found
     //Loop operates as follows:
@@ -32,6 +38,9 @@ __global__ void verticalOperation(int size, float *deviceArray, float *deviceRes
             thread_max = deviceArray[loopIndex + i];
         }
     }
+    
+
+    
     //max for each thread is placed into thread_maxmia for next comparison
     //NOTE: Since thread_maxima is shared memory thread_id is used.
     //      Shared Memory is only shared across a single block so index isn't used.
@@ -68,6 +77,8 @@ __global__ void verticalOperation(int size, float *deviceArray, float *deviceRes
         }
         deviceResult[0] = max;
     }
+    
+    */
     
 }
 
@@ -114,14 +125,12 @@ void testVerticalOperation() {
     //Forces CPU to wait for GPU to finish before accessing
     cudaDeviceSynchronize();
     
+        
     //copy memory to host from device and print error if found
     cudaError_t cudaMemcpy2Err = cudaMemcpy(&result, deviceResult, memSize, cudaMemcpyDeviceToHost);
     if (cudaMemcpy2Err != cudaSuccess) {
         cout << "Memcpy to Host Error: " << cudaMemcpy2Err << endl;
     }
-
-    
-
 
     cout << result[0] << endl;
 
