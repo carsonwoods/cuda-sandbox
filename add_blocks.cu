@@ -5,6 +5,10 @@
 using namespace std;
 
 
+__global__ void testPrint() {
+    printf("Hello world\n");
+}
+
 __global__
 void add(int n, float *x, float *y) {
     //contains the index of the current thread within its block
@@ -16,6 +20,7 @@ void add(int n, float *x, float *y) {
     for (int i = index; i < n; i += stride) {
         y[i] = x[i] + y[i];
     }
+
 }
 
 
@@ -38,9 +43,9 @@ void add2(int n, float *x, float *y, float a, float b) {
     }
 }
 
-__global__ void verticalOperation(int size, float *global_input_data, float *global_output_data) {
-    printf("%d\n",global_input_data[5]);
+__global__ void verticalOperation(int size, float *deviceArray, float *deviceResult) {
 
+    /*
     //each thread loads one element from global memory into shared memory
     int thread_id = threadIdx.x;
     int numBlocks = gridDim.x;
@@ -78,7 +83,6 @@ __global__ void verticalOperation(int size, float *global_input_data, float *glo
     //appends that value to block_maximum[]
     if (thread_id == 0) {
         float max = thread_maxima[0];
-
         //thread 0 of each block iterates across all values of thread_maxima
         //numTotalThreads/(size/blockDim.x) should be the size of thread_maxima
         for (int x = 0; x < numTotalThreads/(size/blockDim.x); x++) {
@@ -95,6 +99,7 @@ __global__ void verticalOperation(int size, float *global_input_data, float *glo
     __syncthreads();
 
     //find the maximum value from all blocks using one last thread
+        
     if (loopIndex == 0) {
         float max = global_output_data[0];
         for (int x = 0; x < numBlocks; x++) {
@@ -104,6 +109,10 @@ __global__ void verticalOperation(int size, float *global_input_data, float *glo
         }
         global_output_data[0] = max;
     }
+    global_output_data[loopIndex] = 289.0f;
+    */    
+    
+    deviceResult = deviceArray;
 
 }
 
@@ -114,28 +123,25 @@ void testVerticalOperation() {
     //(in this case) left by 20 spaces and fill the empty space with zeros.
     int N = 1<<18; // 1M elements
 
-    float *deviceArray;
-    float hostArray[N], result[N];
+    float *deviceArray, *deviceResult; //device copies
+    float hostArray, result; //host copies
+
+    hostArray = 5;
 
     //Allocates "Unified Memory" which is accessible from both the CPU and GPU.
-    cudaError_t cudaMallocErr1 = cudaMallocManaged(&deviceArray, N*sizeof(float));
+    cudaError_t cudaMallocErr1 = cudaMalloc(&deviceArray, sizeof(float));
     if (cudaMallocErr1 != cudaSuccess) {
         cout << "CUDA Error" << endl;
     }
 
-
-    //initialize x and y arrays on the host
-    for (int i = 0; i < N; i++) {
-        hostArray[i] = 1.0f;
-        result[i] = 0.0f;
-    }
+    //Allocates "Unified Memory" which is accessible from both the CPU and GPU.
+    cudaError_t cudaMallocErr2 = cudaMalloc(&deviceResult, sizeof(float));
+    if (cudaMallocErr2 != cudaSuccess) {
+        cout << "CUDA Error" << endl;
+    }  
 
     int blockSize = 256;
-    int numBlocks = N/blockSize;
-
-
-    //ensures that there is a value that could be largest
-    hostArray[5] = 987654.0f;
+    int numBlocks = N/blockSize; 
 
     //copy memory to device from host and print error if found
     cudaError_t cudaMemcpy1Err = cudaMemcpy(deviceArray, hostArray, N*sizeof(float), cudaMemcpyHostToDevice);
@@ -143,23 +149,32 @@ void testVerticalOperation() {
         cout << "Memcpy to Device Error: " << cudaMemcpy1Err << endl;
     }
 
-    verticalOperation<<<numBlocks, blockSize, N*sizeof(float)>>>(N, deviceArray, result);
+    /*
+    //copy memory to device from host and print error if found
+    cudaMemcpy1Err = cudaMemcpy(deviceResult, result, N*sizeof(float), cudaMemcpyHostToDevice);
+    if (cudaMemcpy1Err != cudaSuccess) {
+        cout << "Memcpy to Device Error: " << cudaMemcpy1Err << endl;
+    }
+    */
+
+    verticalOperation<<<1, 1, N*sizeof(float)>>>(N, deviceArray, deviceResult);
 
     //copy memory to host from device and print error if found
-    cudaError_t cudaMemcpy2Err = cudaMemcpy(result, deviceArray, N*sizeof(float), cudaMemcpyDeviceToHost);
+    cudaError_t cudaMemcpy2Err = cudaMemcpy(result, deviceResult, N*sizeof(float), cudaMemcpyDeviceToHost);
     if (cudaMemcpy2Err != cudaSuccess) {
         cout << "Memcpy to Host Error: " << cudaMemcpy2Err << endl;
     }
 
-    cout << "Largest value in hostArray: " << result[0] << endl;
-
-    cout << "Done!" << endl;
-
     //Forces CPU to wait for GPU to finish before accessing
     cudaDeviceSynchronize();
 
+    cout << "Largest value in hostArray: " << result << endl;
+
+    cout << "Done!" << endl;
+
     // Free memory
     cudaFree(deviceArray);
+    cudaFree(deviceResult);
 }
 
 
@@ -167,6 +182,12 @@ int main() {
 
     //Runs test for verticalOperation kernal on GPU
     testVerticalOperation();
+  
+
+
+
+
+    //cudaDeviceSynchronize(); 
     return 0;
 
 }
