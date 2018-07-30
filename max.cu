@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdio.h>
+#include <cstdlib>
 
 using namespace std;
 
@@ -51,7 +52,7 @@ void testVerticalOperation() {
     float initialValue[number_of_values], result[number_of_values]; //host copies
 
     for (int x = 0; x < number_of_values; x++) {
-        initialValue[x] = 289.0f;
+        initialValue[x] = 0.0f;
     }
 
     initialValue[2] = 500.0f;
@@ -102,15 +103,9 @@ void testVerticalOperation() {
 
 
 int main() {
-
     //Runs test for verticalOperation kernal on GPU
     testVerticalOperation();
 
-
-
-
-
-    //cudaDeviceSynchronize();
     return 0;
 
 }
