@@ -28,13 +28,13 @@ __global__ void verticalOperation(int size, float *deviceArray, float *deviceRes
         __syncthreads();
     }
 
-    if (threadIdx.x == 0) { deviceArray[blockIdx.x] = sdata[0]; }
+    if (threadIdx.x == 0) { deviceResult[blockIdx.x] = sdata[0]; }
 
     //stride is currently the length of the unsorted array that still needs to be compared
     for (int stride = gridDim.x; stride => 1; stride /= 2) {
         if (index < stride/2) {
-            if (sdata[index + (stride/2)] > sdata[index]) {
-                sdata[index] = sdata[index + (stride/2)];
+            if (deviceResult[index + (stride/2)] > deviceResult[index]) {
+                deviceResult[index] = deviceResult[index + (stride/2)];
             }
         }
     }
