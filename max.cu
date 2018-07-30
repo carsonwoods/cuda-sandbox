@@ -5,21 +5,19 @@ using namespace std;
 
 __global__ void verticalOperation(int size, float *deviceArray, float *deviceResult) {
 
-    int numBlocks = gridDim.x;
-    int numTotalThreads = gridDim.x * blockDim.x;
-    int thread_index = blockIdx.x * blockDim.x + threadIdx.x;
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
     int blockSize = blockDim.x; //NOTE: this would also be the amount of values in shared memory (or it should be anyways)
 
     //allocated shared memory to reduce global memory access overhead
     extern __shared__ float sdata[];
 
     //move each value from deviceArray pointer into shared_memory_array
-    sdata[threadIdx.x] = deviceArray[thread_index];
+    sdata[threadIdx.x] = deviceArray[index];
 
     __syncthreads();
-
+    
     //stride is currently the length of the unsorted array that still needs to be compared
-    for (int stride = blockSize; stride => 1; stride /= 2) {
+    for (int stride = blockSize; stride >= 1; stride /= 2) {
         if (threadIdx.x < stride/2) {
             if (sdata[threadIdx.x + (stride/2)] > sdata[threadIdx.x]) {
                 sdata[threadIdx.x] = sdata[threadIdx.x + (stride/2)];
@@ -27,81 +25,17 @@ __global__ void verticalOperation(int size, float *deviceArray, float *deviceRes
         }
         __syncthreads();
     }
-
+    
     if (threadIdx.x == 0) { deviceResult[blockIdx.x] = sdata[0]; }
 
     //stride is currently the length of the unsorted array that still needs to be compared
-    for (int stride = gridDim.x; stride => 1; stride /= 2) {
+    for (int stride = gridDim.x; stride >= 1; stride /= 2) {
         if (index < stride/2) {
             if (deviceResult[index + (stride/2)] > deviceResult[index]) {
                 deviceResult[index] = deviceResult[index + (stride/2)];
             }
         }
     }
-
-    
-
-    /*
-    extern __shared__ float thread_maxima[];
-
-    //Sets each thread's starting point in the deviceArray
-    int loopIndex = (size/numTotalThreads) * thread_index;
-
-    //sets thread_max to first element in array for initial comparison
-    float thread_max = deviceArray[loopIndex];
-
-    //iterate across a threads domain until maximum is found
-    //Loop operates as follows:
-    //Each thread has its starting position set by loopIndex.
-    //Loop will iterate until the starting point of the next thread is hit.
-    //Each iteration the thread compares the value in the array against the current thread_max
-    for(int i = loopIndex; i < loopIndex + size/blockDim.x; i++) {
-        if (deviceArray[loopIndex + i] > thread_max) {
-            thread_max = deviceArray[loopIndex + i];
-        }
-    }
-
-
-
-    //max for each thread is placed into thread_maxmia for next comparison
-    //NOTE: Since thread_maxima is shared memory thread_id is used.
-    //      Shared Memory is only shared across a single block so index isn't used.
-    thread_maxima[thread_index] = thread_max;
-
-    //Threads are synced to ensure all comparisons that need to be made are done.
-    __syncthreads();
-
-
-    //find the maximum value from all threads in a single block
-    //appends that value to block_maximum[]
-    if (threadIdx.x == 0) {
-        float max = thread_maxima[0];
-        //thread 0 of each block iterates across all values of thread_maxima
-        //numTotalThreads/(size/blockDim.x) should be the size of thread_maxima
-        for (int x = 0; x < blockDim.x; x++) {
-            if (thread_maxima[x] > max) {
-                max = thread_maxima[x];
-            }
-        }
-
-        //The largest value of each block is placed in deviceArray
-        deviceResult[blockIdx.x] = max;
-    }
-
-    //find the maximum value from all blocks using one last thread
-
-    if (loopIndex == 0) {
-        float max = deviceResult[0];
-        for (int x = 1; x < numBlocks; x++) {
-            if (deviceResult[x] > max) {
-                max = deviceResult[x];
-            }
-        }
-        deviceResult[0] = max;
-    }
-
-    */
-
 }
 
 void testVerticalOperation() {
@@ -121,6 +55,9 @@ void testVerticalOperation() {
     }
 
     initialValue[2] = 500.0f;
+    initialValue[3] = 600.0f;
+    initialValue[66] = 998.0f;
+    initialValue[30000] = 1000.0f;
 
 
     //Allocates "Unified Memory" which is accessible from both the CPU and GPU.
@@ -142,7 +79,7 @@ void testVerticalOperation() {
         cout << "Memcpy to Device Error: " << cudaMemcpy1Err << endl;
     }
 
-    verticalOperation<<<1, 1>>>(number_of_values, deviceValue, deviceResult);
+    verticalOperation<<<numBlocks, blockSize, memSize/blockSize>>>(number_of_values, deviceValue, deviceResult);
 
     //Forces CPU to wait for GPU to finish before accessing
     cudaDeviceSynchronize();
