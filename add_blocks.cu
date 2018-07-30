@@ -99,7 +99,7 @@ __global__ void verticalOperation(int size, float *deviceArray, float *deviceRes
     __syncthreads();
 
     //find the maximum value from all blocks using one last thread
-        
+
     if (loopIndex == 0) {
         float max = global_output_data[0];
         for (int x = 0; x < numBlocks; x++) {
@@ -110,8 +110,8 @@ __global__ void verticalOperation(int size, float *deviceArray, float *deviceRes
         global_output_data[0] = max;
     }
     global_output_data[loopIndex] = 289.0f;
-    */    
-    
+    */
+
     deviceResult = deviceArray;
 
 }
@@ -138,10 +138,10 @@ void testVerticalOperation() {
     cudaError_t cudaMallocErr2 = cudaMalloc(&deviceResult, sizeof(float));
     if (cudaMallocErr2 != cudaSuccess) {
         cout << "CUDA Error" << endl;
-    }  
+    }
 
     int blockSize = 256;
-    int numBlocks = N/blockSize; 
+    int numBlocks = N/blockSize;
 
     //copy memory to device from host and print error if found
     cudaError_t cudaMemcpy1Err = cudaMemcpy(deviceArray, hostArray, N*sizeof(float), cudaMemcpyHostToDevice);
@@ -182,12 +182,8 @@ int main() {
 
     //Runs test for verticalOperation kernal on GPU
     testVerticalOperation();
-  
 
-
-
-
-    //cudaDeviceSynchronize(); 
+    //cudaDeviceSynchronize();
     return 0;
 
 }
