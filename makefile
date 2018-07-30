@@ -1,7 +1,7 @@
 # -Wall:  Show Compilation Errors AND Warnings
 # -std=c++17 Compile for C++ 17 Standard
 
-all : add_cpu add_cuda add_cuda_block
+all : add_cpu add_cuda add_cuda_block max
 
 add_cpu: add.cpp
 	g++ -std=c++17 -Wall add.cpp -o add_cpu
