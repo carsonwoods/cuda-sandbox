@@ -13,7 +13,7 @@ add_cuda_block: add_blocks.cu
 	nvcc -arch=compute_61  add_blocks.cu -o add_cuda_block
 
 max: max.cu
-	nvcc -arch=compute_61 max.cu -o max
+	nvcc max.cu -o max
 
 clean: 
 	rm add_cpu add_cuda add_cuda_block max
