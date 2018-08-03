@@ -46,7 +46,7 @@ void testVerticalOperation() {
     int memSize = number_of_values*sizeof(float);
 
     int blockSize = 256;
-    int numBlocks = 1024;
+    int numBlocks = (number_of_values/blockSize)+1;
 
     float *deviceValue, *deviceResult; //device copies
     float initialValue[number_of_values], result[number_of_values]; //host copies
@@ -59,6 +59,8 @@ void testVerticalOperation() {
     initialValue[3] = 600.0f;
     initialValue[66] = 998.0f;
     initialValue[30000] = 1000.0f;
+
+
 
 
     //Allocates "Unified Memory" which is accessible from both the CPU and GPU.
