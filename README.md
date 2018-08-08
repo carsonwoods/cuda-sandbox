@@ -1,10 +1,10 @@
-# cuda-tutorial
-"An even easier introduction to CUDA" tutorial
+# cuda-sandbox
+Repository for experimenting with CUDA programming.
 
-add() contains all the code that the Nvidia provided "an even easier introduction to CUDA" tutorial provided.  <br \>
+add.cu and add_blocks.cu contain all the code that the Nvidia provided "an even easier introduction to CUDA" tutorial provided.  <br \>
 
-add2() contains additional experimentation. After add() all additional code is not found in the tutorial.   <br \>
+max.cu contains code that I wrote for finding the maximum value in an array in parallel on a GPU. <br \>
+
+cublas_test.cu contains sample code to experiment with the Nvidia cuBLAS library for accelerated linear algebra.
 
 
-# Additional Code
-verticalOperation(): found in max.cu this function finds the max value in an array of values on an nvidia GPU.
