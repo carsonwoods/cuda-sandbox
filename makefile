@@ -1,7 +1,7 @@
 # -Wall:  Show Compilation Errors AND Warnings
 # -std=c++17 Compile for C++ 17 Standard
 
-all : add_cpu add_cuda add_cuda_block max
+all : add_cpu add_cuda add_cuda_block max cublas
 
 add_cpu: add.cpp
 	g++ -std=c++17 -Wall add.cpp -o add_cpu
@@ -15,5 +15,8 @@ add_cuda_block: add_blocks.cu
 max: max.cu
 	nvcc max.cu -o max
 
+cublas: cublas_test.cu
+	nvcc cublas_test.cu -lcublas -o cublas
+
 clean: 
-	rm add_cpu add_cuda add_cuda_block max
+	rm add_cpu add_cuda add_cuda_block max cublas
