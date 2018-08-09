@@ -6,3 +6,7 @@ add.cu and add_blocks.cu contain all the code that the Nvidia provided "an even 
 max.cu contains code that I wrote for finding the maximum value in an array in parallel on a GPU.
 
 cublas_test.cu contains sample code to experiment with the Nvidia cuBLAS library for accelerated linear algebra.
+
+# Extra Information
+In order to compile with cublas library enabled run 
+```nvcc "target_filename" -lcublas -o "output_filename"```
