@@ -35,3 +35,4 @@ add_cuda_block
 add_cpu
 max
 .nfs*
+*.swp
