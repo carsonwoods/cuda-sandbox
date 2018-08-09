@@ -5,6 +5,7 @@
 #include <math.h>
 #include <cuda_runtime.h>
 #include "cublas_v2.h"
+#include <iostream>
 
 #define M 6
 #define N 5
@@ -34,7 +35,7 @@ int main (void){
     int i, j;
     float* devPtrA;
     
-    //Creates pointer a then allocates it as GPU memory.
+    //Creates pointer a then allocates it as CPU memory.
     float* a = 0;
     a = (float *)malloc (M * N * sizeof (*a));
     //ensures that a was allocated on the host
@@ -44,7 +45,7 @@ int main (void){
     }
 
 
-    //iterates through memory space of a  and assigns each index a value
+    //iterates through memory space of a and assigns each index a value
     for (j = 0; j < N; j++) {
         for (i = 0; i < M; i++) {
             a[IDX2C(i,j,M)] = (float)(i * M + j + 1);
