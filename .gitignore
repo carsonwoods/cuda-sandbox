@@ -34,5 +34,7 @@ add_cuda
 add_cuda_block
 add_cpu
 max
+cublas_sample
+cublas
 .nfs*
 *.swp
