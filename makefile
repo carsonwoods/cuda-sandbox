@@ -17,7 +17,7 @@ max: max.cu
 
 cublas: cublas_sample.cu cublas_sandbox.cu
 	nvcc cublas_sample.cu -lcublas -o cublas_sample
-	nvcc cublsa_sandbox.cu -lcublas -o cublas
+	nvcc cublas_sandbox.cu -lcublas -o cublas
 
 clean: 
 	rm add_cpu add_cuda add_cuda_block max cublas cublas_sample
