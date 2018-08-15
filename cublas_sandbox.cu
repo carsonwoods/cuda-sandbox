@@ -28,7 +28,7 @@ int runCublasSscal() {
         cout << "Host memory allocation failed" << endl;
         return -1;
     }
-
+    
     for (j = 0; j < N; j++) {
         //first loop iterates through all rows
         for (i = 0; i < M; i++) {
@@ -125,7 +125,7 @@ int runCublasSgemm() {
 
 
     //Ensures that host memory is allocated before proceeding
-    if (!arrayA || !arrayB) {
+    if (!arrayA || !arrayB || !arrayC) {
         cout << "Host memory allocation failed\n" << endl;
         return -1;
     }
@@ -142,8 +142,9 @@ int runCublasSgemm() {
         }
     }
     
-    printf("arrayA:\n");
+
     //iterates over array and prints result
+    printf("arrayA:\n");
     for (j = 0; j < N; j++) {
         for (i = 0; i < M; i++) {
             printf ("%7.0f", arrayA[INDEX(i,j,M)]);
@@ -151,8 +152,8 @@ int runCublasSgemm() {
         printf ("\n");
     }
     
-    printf("arrayB:\n");
     //iterates over array and prints result
+    printf("arrayB:\n");
     for (j = 0; j < N; j++) {
         for (i = 0; i < M; i++) {
             printf ("%7.0f", arrayB[INDEX(i,j,M)]);
@@ -165,25 +166,21 @@ int runCublasSgemm() {
     if (cudaErr != cudaSuccess) {
         printf("Device memory allocation failed\n");
         return -1;
-    } else {
-        printf("Device memory allocated successfully\n");
     }
 
     cudaErr = cudaMalloc((void**)&deviceArrayB, M*N*sizeof(*arrayB));
     if (cudaErr != cudaSuccess) {
         printf("Device memory allocation failed\n");
         return -1;
-    } else {
-        printf("Device memory allocated successfully\n");
     }
-
+    
     cudaErr = cudaMalloc((void**)&deviceArrayC, M*N*sizeof(*arrayC));
     if (cudaErr != cudaSuccess) {
         printf("Device memory allocation failed\n");
         return -1;
-    } else {
-        printf("Device memory allocated successfully\n");
     }
+    
+    printf("Device memory allocated successfully\n");
     
     //initializes cublas API
     status = cublasCreate(&handle);
@@ -196,10 +193,10 @@ int runCublasSgemm() {
         free(arrayB);
         free(arrayC);
         return -1;
-    } else {
-         printf("cuBLAS API Initialized Successfully\n");
     }
 
+    printf("cuBLAS API Initialized Successfully\n");
+    
     //copies matrix from host to device
     status = cublasSetMatrix(M, N, sizeof(*arrayA), arrayA, M, deviceArrayA, M);
     if (status != CUBLAS_STATUS_SUCCESS) {
@@ -210,8 +207,6 @@ int runCublasSgemm() {
         cudaFree(deviceArrayC);
         cublasDestroy(handle);
         return -1;
-    } else {
-        printf("Data successfully uploaded to devi16ce\n");
     }
     
     //copies matrix from host to device
@@ -224,8 +219,6 @@ int runCublasSgemm() {
         cudaFree(deviceArrayC);
         cublasDestroy(handle);
         return -1;
-    } else {
-        printf("Data successfully uploaded to device\n");
     }
     
     //copies matrix from host to device
@@ -238,16 +231,18 @@ int runCublasSgemm() {
         cudaFree(deviceArrayC);
         cublasDestroy(handle);
         return -1;
-    } else {
-        printf("Data successfully uploaded to device\n");
     }
+    
+    printf("Data successfully uploaded to device\n");
     
     //Currently set to 1 because I just want to test GEMM functionality
     float alphaScalar = 1.0f;
-    float betaScalar = 1.0f;
+    float betaScalar = 0.0f;
 
     cublasOperation_t transa = CUBLAS_OP_N;
     cublasOperation_t transb = CUBLAS_OP_N;
+    
+    printf("Performing GPU Operation\n");
     
     cublasSgemm(handle, transa, transb, M, N, 2, &alphaScalar, deviceArrayA, M,
                 deviceArrayB, M, &betaScalar, deviceArrayC, M);
@@ -260,19 +255,21 @@ int runCublasSgemm() {
         cudaFree(deviceArrayC);
         cublasDestroy(handle);
         return -1;
-    } else {
-        printf("Data Download Success\n");
     }
     
-    //Frees device pointer from cuda memory
+    printf("Data Downloaded Successfully\n");
+    
+    //Frees device pointers from cuda memory
     cudaFree(deviceArrayA);
     cudaFree(deviceArrayB);
     cudaFree(deviceArrayC);
     
-    //uninitialize the cublas hanlder
+    //Uninitializes the cuBLAS hanlder
     cublasDestroy(handle);
 
-    //iterates over array and prints result
+    printf("Result:\n");
+    
+    //Iterates over array and prints result
     for (j = 0; j < N; j++) {
         for (i = 0; i < M; i++) {
             printf ("%7.0f", arrayC[INDEX(i,j,M)]);
@@ -280,7 +277,7 @@ int runCublasSgemm() {
         printf ("\n");
     }
 
-    //free host pointer a from memory
+    //Frees host pointers from memory
     free(arrayA);
     free(arrayB);
     free(arrayC);
