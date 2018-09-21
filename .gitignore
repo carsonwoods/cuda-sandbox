@@ -36,5 +36,6 @@ add_cpu
 max
 cublas_sample
 cublas
+hgemm_test_out
 .nfs*
 *.swp
