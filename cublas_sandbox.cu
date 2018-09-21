@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <cuda_runtime.h>
 #include <cublas_v2.h>
 #include <iostream>
 
@@ -47,12 +48,13 @@ int runCublasSscal() {
     status = cublasCreate(&handle);
     if (status != CUBLAS_STATUS_SUCCESS) {
         printf("cuBLAS API Initialization Failed\n");
-        cudaFree(deviceArray);
+        cudaFree(deviceArray);    
         free(hostArray);
         return -1;
     } else {
          printf("cuBLAS API Initialized Successfully\n");
     }
+
 
     status = cublasSetMatrix(M, N, sizeof(*hostArray), hostArray, M, deviceArray, M);
     if (status != CUBLAS_STATUS_SUCCESS) {
@@ -77,7 +79,8 @@ int runCublasSscal() {
         cudaFree (deviceArray);
         cublasDestroy(handle);
         return -1;
-    }
+    }        
+
 
     //Frees device pointer from cuda memory
     cudaFree(deviceArray);
@@ -101,8 +104,8 @@ int runCublasSscal() {
 
 int runCublasSgemm() {
 
-    int M = 2;
-    int N = 2;
+    int M = 7;
+    int N = 7;
 
     cudaError_t cudaErr;
 
@@ -110,7 +113,6 @@ int runCublasSgemm() {
     cublasHandle_t handle;
 
     int i, j; //Will be used to iterate through array
-
     float* arrayA = 0; //will store a copy of the array on host
     float* arrayB = 0;
     float* arrayC = 0;
@@ -179,7 +181,6 @@ int runCublasSgemm() {
         printf("Device memory allocation failed\n");
         return -1;
     }
-    
     printf("Device memory allocated successfully\n");
     
     //initializes cublas API
@@ -205,9 +206,13 @@ int runCublasSgemm() {
         cudaFree(deviceArrayA);
         cudaFree(deviceArrayB);
         cudaFree(deviceArrayC);
+        free(arrayA);
+        free(arrayB);
+        free(arrayC);
         cublasDestroy(handle);
         return -1;
-    }
+    }    
+
     
     //copies matrix from host to device
     status = cublasSetMatrix(M, N, sizeof(*arrayB), arrayB, M, deviceArrayB, M);
@@ -217,6 +222,9 @@ int runCublasSgemm() {
         cudaFree(deviceArrayA);
         cudaFree(deviceArrayB);
         cudaFree(deviceArrayC);
+        free(arrayA);
+        free(arrayB);
+        free(arrayC);
         cublasDestroy(handle);
         return -1;
     }
@@ -229,6 +237,9 @@ int runCublasSgemm() {
         cudaFree(deviceArrayA);
         cudaFree(deviceArrayB);
         cudaFree(deviceArrayC);
+        free(arrayA);
+        free(arrayB);
+        free(arrayC);
         cublasDestroy(handle);
         return -1;
     }
@@ -244,7 +255,7 @@ int runCublasSgemm() {
     
     printf("Performing GPU Operation\n");
     
-    cublasSgemm(handle, transa, transb, M, N, 2, &alphaScalar, deviceArrayA, M,
+    cublasSgemm(handle, transa, transb, M, N, M, &alphaScalar, deviceArrayA, M,
                 deviceArrayB, M, &betaScalar, deviceArrayC, M);
     
     status = cublasGetMatrix (M, N, sizeof(*arrayC), deviceArrayC, M, arrayC, M);
@@ -253,6 +264,9 @@ int runCublasSgemm() {
         cudaFree(deviceArrayA);
         cudaFree(deviceArrayB);
         cudaFree(deviceArrayC);
+        free(arrayA);
+        free(arrayB);
+        free(arrayC);
         cublasDestroy(handle);
         return -1;
     }
@@ -282,7 +296,7 @@ int runCublasSgemm() {
     free(arrayB);
     free(arrayC);
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 
