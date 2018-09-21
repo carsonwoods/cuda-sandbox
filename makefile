@@ -15,7 +15,8 @@ add_cuda_block: add_blocks.cu
 max: max.cu
 	nvcc max.cu -o max
 
-cublas: cublas_sample.cu cublas_sandbox.cu
+cublas: cublas_sample.cu cublas_sandbox.cu hgemm_test.cu
+	nvcc hgemm_test.cu -lcublas -o hgemm_test_out
 	nvcc cublas_sample.cu -lcublas -o cublas_sample
 	nvcc cublas_sandbox.cu -lcublas -o cublas
 
