@@ -21,4 +21,4 @@ cublas: cublas_sample.cu cublas_sandbox.cu hgemm_test.cu
 	nvcc cublas_sandbox.cu -lcublas -o cublas
 
 clean: 
-	rm add_cpu add_cuda add_cuda_block max cublas cublas_sample
+	rm add_cpu add_cuda add_cuda_block max cublas cublas_sample hgemm_test_out
