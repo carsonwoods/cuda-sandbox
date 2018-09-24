@@ -14,11 +14,15 @@ add_cuda_block: add_blocks.cu
 
 max: max.cu
 	nvcc max.cu -o max
+	
+
+hgemm: hgemm_test.cu
+	nvcc -std=c++11 hgemm_test.cu -lcublas -o hgemm_test_out
 
 cublas: cublas_sample.cu cublas_sandbox.cu hgemm_test.cu
-	nvcc hgemm_test.cu -lcublas -o hgemm_test_out
-	nvcc cublas_sample.cu -lcublas -o cublas_sample
-	nvcc cublas_sandbox.cu -lcublas -o cublas
+	nvcc -std=c++11 hgemm_test.cu -lcublas -o hgemm_test_out
+	nvcc -std=c++11 cublas_sample.cu -lcublas -o cublas_sample
+	nvcc -std=c++11 cublas_sandbox.cu -lcublas -o cublas
 
 clean: 
 	rm add_cpu add_cuda add_cuda_block max cublas cublas_sample hgemm_test_out
