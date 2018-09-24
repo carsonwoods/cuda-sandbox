@@ -2,16 +2,18 @@
 #include <stdlib.h>
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
+#include <chrono>
 
 #define INDEX(i,j,ld) (((j)*(ld))+(i))
+
+// Uncomment below to print debug statements
+// #define DEBUG
 
 using namespace std;
 
 
-int main() {
-    
-    int M = 1000;          // Sets the Row Count
-    int N = 1000;          // Sets the Col Count
+int hgemm_test(int M, int N) {
+
     
     int i, j;              // Array index iterators
     
@@ -80,8 +82,9 @@ int main() {
         return -1;
     }
     
-    printf("Device Memory Allocated Successfully\n");
-        
+    #ifdef DEBUG
+        printf("Device Memory Allocated Successfully\n");
+    #endif    
 
     // Initialize CUBLAS API
     status = cublasCreate(&handle);
@@ -96,7 +99,9 @@ int main() {
         return -1;
     }
     
-    printf("cuBLAS API Initialized Successfully\n");
+    #ifdef DEBUG
+        printf("cuBLAS API Initialized Successfully\n");
+    #endif
     
     // Move Matrix A from Host to Device
     // NOTE: M = Row count & Leading Dimension A/B(lda/ldb)
@@ -125,8 +130,10 @@ int main() {
         cudaFree(deviceArrayA);
         cudaFree(deviceArrayB);
         cudaFree(deviceArrayC);
+
         free(arrayA);
         free(arrayB);
+
         free(arrayC);
         cublasDestroy(handle);
         return -1;
@@ -142,7 +149,8 @@ int main() {
         printf("Freeing Memory and exiting\n");
         cudaFree(deviceArrayA);
         cudaFree(deviceArrayB);
-        cudaFree(deviceArrayC);
+        cudaFree(deviceArrayC)
+;
         free(arrayA);
         free(arrayB);
         free(arrayC);
@@ -150,7 +158,9 @@ int main() {
         return -1;
     }
     
-    printf("SUCCESS: Data transfered to device\n");
+    #ifdef DEBUG
+        printf("SUCCESS: Data transfered to device\n");
+    #endif
     
     // Currently set to 1 and 0 respectively to test GEMM functionality
     float alphaScalar = 1.0f;
@@ -160,7 +170,12 @@ int main() {
     cublasOperation_t transA = CUBLAS_OP_N;
     cublasOperation_t transB = CUBLAS_OP_N;
     
-    printf("Performing GPU Operation\n");
+    #ifdef DEBUG
+        printf("Performing GPU Operation\n");
+    #endif
+    
+    // Marks current time for measuring performance
+    auto start = chrono::high_resolution_clock::now();
     
     cublasSgemmEx(handle, 
                   transA, 
@@ -180,7 +195,20 @@ int main() {
                   CUDA_R_16F, 
                   M);
     
+    
+    // Forces device to finish before proceeding (for timing)
+    cudaDeviceSynchronize();
+
+    
+    // Marks current time for measuring performance
+    auto finish = chrono::high_resolution_clock::now();
+    chrono::duration<double> elapsed = finish - start;
+    
+    printf("HGEMM: %d x %d -- %fs\n",M,N,elapsed.count());
+    
+    
     /*
+
     cublasHgemm(handle, transA, transB, M, N, N, 
                 &alphaScalar, deviceArrayA, M, 
                 deviceArrayB, M, &betaScalar, 
@@ -194,12 +222,15 @@ int main() {
         cudaFree(deviceArrayB);
         cudaFree(deviceArrayC);
         free(arrayA);
-        free(arrayB);
+        free(arrayB);    
         free(arrayC);
         cublasDestroy(handle);
         return -1;
     }
     
+    #ifdef DEBUG
+        printf("GPU Operation Completed\nFreeing Resources\n");
+    #endif
     
     // Frees device pointers from cuda memory
     cudaFree(deviceArrayA);
@@ -213,6 +244,18 @@ int main() {
     free(arrayA);
     free(arrayB);
     free(arrayC);
+    
+    return EXIT_SUCCESS;
 
+}
+
+int main() {
+    
+    for (int x = 0; x <= 30000; x += 5000) {
+        if (x != 0) {
+            hgemm_test(x,x);
+        }
+    }
+    
     return EXIT_SUCCESS;
 }
