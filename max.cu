@@ -94,6 +94,7 @@ void testVerticalOperation() {
         cout << "Memcpy to Host Error: " << cudaMemcpy2Err << endl;
     }
 
+
     cout << result[0] << endl;
 
     cout << "Done!" << endl;

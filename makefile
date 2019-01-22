@@ -9,12 +9,8 @@ add_cpu: add.cpp
 add_cuda: add.cu
 	nvcc add.cu -o add_cuda
 
-add_cuda_block: add_blocks.cu
-	nvcc -arch=compute_61  add_blocks.cu -o add_cuda_block
-
 max: max.cu
-	nvcc max.cu -o max
-	
+	nvcc max.cu -o max	
 
 hgemm: hgemm_test.cu
 	nvcc -std=c++11 hgemm_test.cu -lcublas -o hgemm_test_out

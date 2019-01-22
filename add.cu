@@ -46,10 +46,9 @@ int main() {
     
     cudaFree(dX);
     cudaFree(dY);
-    
-    for (int i = 0; i < N; i++) {
-        cout << z[i] << endl;
-    }
+
+    printf("Done!\n");
+    printf("Memory freed\n");
     
     return 0;
     
