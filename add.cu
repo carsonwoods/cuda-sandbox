@@ -9,7 +9,7 @@ __global__ void add(float *dX, float *dY) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     
 
-    valuesPerThread = 1;
+    int valuesPerThread = 1;
 
 
     // Each threads will iterate through all assigned values
