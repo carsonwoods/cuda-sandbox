@@ -51,6 +51,8 @@ int main() {
     
     cudaMemcpy(&z, dY, memSize, cudaMemcpyDeviceToHost);
     
+    printf(z[0]);
+
     cudaFree(dX);
     cudaFree(dY);
 
