@@ -12,27 +12,41 @@ __global__ void add(float *dX, float *dY, int N) {
     int arraySize = N;
     int valuesPerThread;
 
-
+    int remainder = 0;
+    
     if (stride < arraySize) {
         // Gets the amount of values not assigned to a thread
-    	int remainder = arraySize % stride;
+        remainder = arraySize % stride;
     	
-        // This is not perfectly optimized, but it will do for now.
-        valuesPerThread = floor(arraySize / stride) + remainder;
+        // Determines how many values each thread should add.
+        valuesPerThread = int(arraySize / stride);
 
+        // Checks to see if casting rounds up and corrects
+        if (valuesPerThread > (arraySize/stride)) {
+            valuesPerThread = valuesPerThread - 1;
+        }
     } else {
     	valuesPerThread = 1;
     }
 
-
     // Assigns a range of values to each thread
-    startLocation = index*valuesPerThread;
+    int startLocation = index*valuesPerThread;
 
 
     // Each threads will iterate through all assigned values
     for (int i = 0; i < valuesPerThread; i++) {
         dY[startLocation+i] = dX[startLocation+i] + dY[startLocation+i];
     } 
+
+    // Takes a remaining thread and sequentially handles any leftover values.
+    if (index == 0 && remainder != 0) {
+        // Remainder index stores the starting position of un-added values
+        int remainderIndex = arraySize - remainder - 1;
+        for (int i = 1; i <= remainder; i++) {
+            dY[remainderIndex + i] = dX[remainderIndex + i] + dY[remainderIndex + i];
+        }
+    }
+
 }
 
 
