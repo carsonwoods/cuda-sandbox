@@ -6,8 +6,8 @@ all : add_cpu add_cuda add_cuda_block max cublas
 add_cpu: add.cpp
 	g++ -std=c++17 -Wall add.cpp -o add_cpu
 
-add_cuda: add.cu
-	nvcc add.cu -o add_cuda
+add_cuda: vectorAdd.cu
+	nvcc vectorAdd.cu -o add_cuda
 
 max: max.cu
 	nvcc max.cu -o max	
