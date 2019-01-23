@@ -86,9 +86,9 @@ int main() {
         }
     }
 
-    int percentError = (errorCount/N)*100
+    int percentError = (errorCount/N)*100;
 
-    printf("Percent Error: %d", percentError);
+    printf("Percent Error: %d\n", percentError);
 
     cudaFree(dX);
     cudaFree(dY);
