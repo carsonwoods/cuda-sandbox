@@ -9,7 +9,6 @@ __global__ void add(float *dX, float *dY) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
 
-    printf(stride);
 
     int valuesPerThread = 1;
 
@@ -19,6 +18,7 @@ __global__ void add(float *dX, float *dY) {
         dY[index+i] = dX[index+i] + dY[index+i];
     }
     
+    dY[index] = stride; 
     
 }
 
@@ -34,7 +34,7 @@ int main() {
     
     for (int i = 0; i < N; i++) {
         x[i] = 1.0f;
-        y[i] = 50.0f;
+        y[i] = 40.0f;
     }
     
     cudaMalloc(&dX, memSize);
