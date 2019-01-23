@@ -10,34 +10,28 @@ __global__ void add(float *dX, float *dY, int N) {
     int stride = blockDim.x * gridDim.x;
 
     int arraySize = N;
-    
-
     int valuesPerThread;
 
+
     if (stride < arraySize) {
+        // Gets the amount of values not assigned to a thread
     	int remainder = arraySize % stride;
-	if (remainder == 0) {
-	    valuesPerThread = arraySize / stride;
-	} else {
-	    // This is not perfectly optimized, but it will do for now.
-	    valuesPerThread = floor(arraySize / stride) + remainder;
-	}
+    	
+        // This is not perfectly optimized, but it will do for now.
+        valuesPerThread = floor(arraySize / stride) + remainder;
 
     } else {
     	valuesPerThread = 1;
     }
 
-    int correctedIndex = index-1;
 
-    if (index != 1) {
-    	correctedIndex = index + valuesPerThread;
-    } else {
-	correctedIndex = index;
-    } 
+    // Assigns a range of values to each thread
+    startLocation = index*valuesPerThread;
+
 
     // Each threads will iterate through all assigned values
     for (int i = 0; i < valuesPerThread; i++) {
-        dY[correctedIndex+i] = dX[correctedIndex+i] + dY[correctedIndex+i];
+        dY[startLocation+i] = dX[startLocation+i] + dY[startLocation+i];
     } 
 }
 
