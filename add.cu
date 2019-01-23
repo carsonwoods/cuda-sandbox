@@ -8,10 +8,15 @@ __global__ void add(float *dX, float *dY) {
     // contains the index of the current thread in the block
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     
-    // contains the number of threads in a block
-    // int stride = blockDim.x * gridDim.x
 
-    dY[index] = dX[index] + dY[index];
+    valuesPerThread = 1;
+
+
+    // Each threads will iterate through all assigned values
+    for (int i = 0; i < valuesPerThread; i++) {
+        dY[index+i] = dX[index+i] + dY[index+i];
+    }
+    
     
 }
 
