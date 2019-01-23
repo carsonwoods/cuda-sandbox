@@ -79,9 +79,16 @@ int main() {
     
     cudaMemcpy(&z, dY, memSize, cudaMemcpyDeviceToHost);
     
+    int errorCount = 0;
     for (int i = 0; i < N; i++) {
-    	cout << z[i] << " - " << i << endl;
+        if (z[i] != 41) {
+            errorCount += 1;
+        }
     }
+
+    int percentError = (errorCount/N)*100
+
+    printf("Percent Error: %d", percentError);
 
     cudaFree(dX);
     cudaFree(dY);
