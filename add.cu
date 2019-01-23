@@ -9,7 +9,7 @@ __global__ void add(float *dX, float *dY) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
 
-    printf(stride)
+    printf(stride);
 
     int valuesPerThread = 1;
 
